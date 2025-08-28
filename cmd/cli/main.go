@@ -43,6 +43,7 @@ func NewBookArgs() *model.Book {
 	flag.StringVar(&book.Format, "format", utils.GetEnv("KAF_CLI_FORMAT", "all"), "书籍格式: all、epub、mobi、azw3。环境变量KAF_CLI_FORMAT可修改默认值")
 	flag.StringVar(&book.Out, "out", "", "输出文件名，不需要包含格式后缀")
 	flag.BoolVar(&book.Tips, "tips", true, "添加本软件教程")
+	flag.StringVar(&book.CSSPath, "csspath", "", "css文件路径")
 	flag.Parse()
 	return &book
 }

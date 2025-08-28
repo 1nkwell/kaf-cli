@@ -53,6 +53,7 @@ type Book struct {
 	Lang             string    // 设置语言
 	Out              string    // 输出文件名
 	Format           string    // 书籍格式
+	CSSPath          string    // CSS文件路径
 	Decoder          *encoding.Decoder
 	PageStylesFile   string
 	Reg              *regexp.Regexp
