@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/go-shiori/go-epub"
@@ -24,21 +25,28 @@ type EpubConverter struct {
 
 func NewEpubConverter() *EpubConverter {
 	return &EpubConverter{
-		HTMLPStart:     `<p class="content">`,
+		HTMLPStart:     `<p>`,
 		HTMLPEnd:       "</p>",
-		HTMLTitleStart: `<h3 class="title">`,
-		HTMLTitleEnd:   "</h3>",
+		HTMLTitleStart: `<h2>`,
+		HTMLTitleEnd:   "</h2>",
 		CSSContent: `
-            .title {text-align: %s}
-            .content { margin-bottom: %s; text-indent: %dem; %s }
+            p {text-align: %s}
+            h2 {margin-bottom: %s; text-indent: %dem; font-size: 1.5em; %s }
+            h2 span {display: block; font-size: 0.75em;}
         `,
 	}
 }
-
+func formatTitle(title string) string {
+	parts := strings.SplitN(title, " ", 2)
+	if len(parts) == 2 {
+		return fmt.Sprintf("<span>%s</span>%s", parts[0], parts[1])
+	}
+	return title
+}
 func (convert EpubConverter) wrapTitle(title, content string) string {
 	var buff bytes.Buffer
 	buff.WriteString(convert.HTMLTitleStart)
-	buff.WriteString(title)
+	buff.WriteString(formatTitle(title))
 	buff.WriteString(convert.HTMLTitleEnd)
 	buff.WriteString(content)
 	return buff.String()
@@ -64,8 +72,11 @@ func (convert EpubConverter) Build(book model.Book) error {
 	e.SetLang(book.Lang)
 	// Set the author
 	e.SetAuthor(book.Author)
-
-	pageStylesFile := filepath.Join(tempDir, "page_styles.css")
+	var pageStylesFile string
+	if book.CSSPath != "" {
+		pageStylesFile = book.CSSPath
+	} else {
+	pageStylesFile = filepath.Join(tempDir, "page_styles.css")
 	var epubcss = convert.CSSContent
 	var excss string
 	if book.LineHeight != "" {
@@ -87,6 +98,7 @@ font-family: "embedfont";
 	err = os.WriteFile(pageStylesFile, fmt.Appendf(nil, epubcss, book.Align, book.Bottom, book.Indent, excss), 0666)
 	if err != nil {
 		return fmt.Errorf("无法写入样式文件: %w", err)
+	}
 	}
 	css, err := e.AddCSS(pageStylesFile, "")
 	if err != nil {
